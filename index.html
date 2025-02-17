@@ -91,7 +91,7 @@
             fetch("https://api.imgur.com/3/upload", {
                 method: "POST",
                 headers: {
-                    "Authorization": "Client-ID bb580da8f47d55e"
+                    "Authorization": "Client-ID YOUR_IMGUR_CLIENT_ID"
                 },
                 body: formData
             })
@@ -99,7 +99,8 @@
             .then(data => {
                 if (data.success) {
                     const imageUrl = data.data.link;
-                    document.getElementById("twitterShare").href = `https://twitter.com/intent/tweet?text=画像を作成しました！&url=${encodeURIComponent(imageUrl)}`;
+                    const tweetText = encodeURIComponent("画像を作成しました！");
+                    document.getElementById("twitterShare").href = `https://twitter.com/intent/tweet?text=${tweetText}&url=${encodeURIComponent(imageUrl)}`;
                     document.getElementById("twitterShare").style.display = "inline";
                 } else {
                     alert("画像のアップロードに失敗しました。");
