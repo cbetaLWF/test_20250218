@@ -39,8 +39,8 @@
                         const userImage = new Image();
                         userImage.src = e.target.result;
                         userImage.onload = function() {
-                            const maxWidth = 1000;
-                            const maxHeight = 1000;
+                            const maxWidth = 200;
+                            const maxHeight = 200;
                             let imgWidth = userImage.width;
                             let imgHeight = userImage.height;
                             
@@ -57,19 +57,17 @@
                             
                             ctx.save();
                             ctx.translate(150, 150); // 画像の中心に移動
-                            ctx.rotate(6 * Math.PI / 180); // 5度回転
-                            ctx.drawImage(userImage, -imgWidth / 2 + 440, -imgHeight / 2 + 375, imgWidth, imgHeight); // 画像を描画
+                            ctx.rotate(5 * Math.PI / 180); // 5度回転
+                            ctx.drawImage(userImage, -imgWidth / 2, -imgHeight / 2, imgWidth, imgHeight); // 画像を描画
                             ctx.restore();
                             
-                            ctx.font = "50px Arial";
-                            ctx.fillStyle = "white";
-                            ctx.fillText(text, 500, 1400);
+                            ctx.font = "30px Arial";
+                            ctx.fillStyle = "black";
+                            ctx.fillText(text, 100, 300);
                             document.getElementById("downloadBtn").style.display = "inline";
-                            
-                            // X（Twitter）共有リンクを設定
-                            const dataURL = canvas.toDataURL("image/png");
-                            document.getElementById("twitterShare").href = `https://twitter.com/intent/tweet?text=画像を作成しました！&url=${encodeURIComponent(dataURL)}`;
-                            document.getElementById("twitterShare").style.display = "inline";
+
+                            // 画像を Imgur にアップロードし、X（Twitter）でシェア
+                            uploadToImgur(canvas);
                         };
                     };
                     reader.readAsDataURL(input);
@@ -83,6 +81,34 @@
             link.download = "created_image.png";
             link.href = canvas.toDataURL("image/png");
             link.click();
+        }
+
+        function uploadToImgur(canvas) {
+            const dataURL = canvas.toDataURL("image/png").split(",")[1];
+            const formData = new FormData();
+            formData.append("image", dataURL);
+            
+            fetch("https://api.imgur.com/3/upload", {
+                method: "POST",
+                headers: {
+                    "Authorization": "Client-ID bb580da8f47d55e"
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const imageUrl = data.data.link;
+                    document.getElementById("twitterShare").href = `https://twitter.com/intent/tweet?text=画像を作成しました！&url=${encodeURIComponent(imageUrl)}`;
+                    document.getElementById("twitterShare").style.display = "inline";
+                } else {
+                    alert("画像のアップロードに失敗しました。");
+                }
+            })
+            .catch(error => {
+                console.error("Error uploading image:", error);
+                alert("画像のアップロード中にエラーが発生しました。");
+            });
         }
     </script>
 </body>
