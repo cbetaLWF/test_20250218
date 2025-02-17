@@ -20,59 +20,44 @@
     <canvas id="canvas"></canvas>
     
     <script>
+        document.getElementById("imageUpload").addEventListener("change", function() {
+            console.log("ファイルが選択されました:", this.files[0]);
+        });
+
         function generateImage() {
             const canvas = document.getElementById("canvas");
             const ctx = canvas.getContext("2d");
             const input = document.getElementById("imageUpload").files[0];
             const text = document.getElementById("textInput").value;
-            const template = new Image();
-            template.src = "template.jpg";
-
-            template.onload = function() {
-                canvas.width = template.width;
-                canvas.height = template.height;
-                ctx.drawImage(template, 0, 0);
-                
-                if (input) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        const userImage = new Image();
-                        userImage.src = e.target.result;
-                        userImage.onload = function() {
-                            const maxWidth = 200;
-                            const maxHeight = 200;
-                            let imgWidth = userImage.width;
-                            let imgHeight = userImage.height;
-                            
-                            if (imgWidth > maxWidth || imgHeight > maxHeight) {
-                                const aspectRatio = imgWidth / imgHeight;
-                                if (imgWidth > imgHeight) {
-                                    imgWidth = maxWidth;
-                                    imgHeight = maxWidth / aspectRatio;
-                                } else {
-                                    imgHeight = maxHeight;
-                                    imgWidth = maxHeight * aspectRatio;
-                                }
-                            }
-                            
-                            ctx.save();
-                            ctx.translate(150, 150); // 画像の中心に移動
-                            ctx.rotate(5 * Math.PI / 180); // 5度回転
-                            ctx.drawImage(userImage, -imgWidth / 2, -imgHeight / 2, imgWidth, imgHeight); // 画像を描画
-                            ctx.restore();
-                            
-                            ctx.font = "30px Arial";
-                            ctx.fillStyle = "black";
-                            ctx.fillText(text, 100, 300);
-                            document.getElementById("downloadBtn").style.display = "inline";
-
-                            // 画像を Imgur にアップロードし、X（Twitter）でシェア
-                            uploadToImgur(canvas);
-                        };
-                    };
-                    reader.readAsDataURL(input);
-                }
+            console.log("選択されたファイル:", input);
+            if (!input) {
+                alert("画像が選択されていません。");
+                return;
+            }
+            if (input.size > 10 * 1024 * 1024) {
+                alert("画像のサイズが大きすぎます（10MB以下にしてください）。");
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const userImage = new Image();
+                userImage.src = e.target.result;
+                userImage.onload = function() {
+                    canvas.width = 500;
+                    canvas.height = 500;
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(userImage, 50, 50, 400, 400);
+                    ctx.font = "30px Arial";
+                    ctx.fillStyle = "black";
+                    ctx.fillText(text, 100, 300);
+                    document.getElementById("downloadBtn").style.display = "inline";
+                    uploadToImgur(canvas);
+                };
             };
+            reader.onerror = function() {
+                alert("画像の読み込みに失敗しました。");
+            };
+            reader.readAsDataURL(input);
         }
         
         function downloadImage() {
@@ -97,6 +82,7 @@
             })
             .then(response => response.json())
             .then(data => {
+                console.log("Imgurアップロード結果:", data);
                 if (data.success) {
                     const imageUrl = data.data.link;
                     const tweetText = encodeURIComponent("画像を作成しました！");
